@@ -1,0 +1,18 @@
+﻿{
+  "name": "AURAFLIX ULTRA",
+  "short_name": "AURAFLIX",
+  "description": "Feel the Story. Live the Aura.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#080611",
+  "theme_color": "#100a25",
+  "icons": [
+    {
+      "src": "/auraflix-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

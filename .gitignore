@@ -1,0 +1,35 @@
+﻿# Secrets and environment files
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Dependencies and builds
+node_modules/
+**/node_modules/
+**/dist/
+.venv/
+**/.venv/
+__pycache__/
+*.pyc
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Deployment credentials
+.vercel/
+
+# Local backups
+backup_*/
+upgrade_backup_*/
+frontend_backup_*/
+backend_backup_*/
+*.pre-deploy-backup
+
+# Local backup files
+frontend/src/*.backup
+frontend/src/*.pre-deploy-backup
