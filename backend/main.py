@@ -49,6 +49,14 @@ def initialize_database():
                 created_at TEXT NOT NULL
             )
         """)
+        connection.execute("""
+            CREATE TABLE IF NOT EXISTS watchlist (
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                movie_id INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                PRIMARY KEY (user_id, movie_id)
+            )
+        """)
 
 
 @asynccontextmanager
@@ -94,6 +102,14 @@ class UserResponse(BaseModel):
     id: int
     name: str
     email: EmailStr
+
+
+class WatchlistRequest(BaseModel):
+    movie_ids: list[int] = Field(max_length=500)
+
+
+class WatchlistResponse(BaseModel):
+    movie_ids: list[int]
 
 
 def create_access_token(user_id: int):
@@ -233,3 +249,45 @@ def login(data: LoginRequest):
 @app.get("/auth/me", response_model=UserResponse)
 def me(user=Depends(get_current_user)):
     return user
+
+
+@app.get("/watchlist", response_model=WatchlistResponse)
+def get_watchlist(user=Depends(get_current_user)):
+    with get_connection() as connection:
+        rows = connection.execute(
+            "SELECT movie_id FROM watchlist WHERE user_id = ? ORDER BY movie_id",
+            (user["id"],),
+        ).fetchall()
+
+    return {"movie_ids": [row["movie_id"] for row in rows]}
+
+
+@app.post("/watchlist", response_model=WatchlistResponse)
+def save_watchlist(
+    data: WatchlistRequest,
+    user=Depends(get_current_user),
+):
+    movie_ids = list(dict.fromkeys(data.movie_ids))
+
+    if any(movie_id < 1 for movie_id in movie_ids):
+        raise HTTPException(
+            status_code=400,
+            detail="Movie IDs must be positive integers.",
+        )
+
+    with get_connection() as connection:
+        connection.execute(
+            "DELETE FROM watchlist WHERE user_id = ?",
+            (user["id"],),
+        )
+
+        now = datetime.now(timezone.utc).isoformat()
+        connection.executemany(
+            """
+            INSERT INTO watchlist (user_id, movie_id, created_at)
+            VALUES (?, ?, ?)
+            """,
+            [(user["id"], movie_id, now) for movie_id in movie_ids],
+        )
+
+    return {"movie_ids": movie_ids}
